@@ -1,17 +1,28 @@
 version: "2.1"
 
-
 services:
-  gateway:
-    build: docker/gateway
+  # gateway:
+  #   build: docker/gateway
+  #   restart: unless-stopped
+  #   ports: 
+  #     - 4500:4500
+  #   expose: 
+  #     - "4500" # metrics port
+  #   depends_on: 
+  #     rabbit:
+  #       condition: service_healthy
+
+  postgres:
+    image: postgres:13-alpine
     restart: unless-stopped
-    ports: 
-      - 4500:4500
-    expose: 
-      - "4500" # metrics port
-    depends_on: 
-      rabbit:
-        condition: service_healthy
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: fyko
+      POSTGRES_PASSWORD: doctordoctor
+      POSTGRES_DB: giveaways_canary
+    ports:
+      - 5432:5432      
 
   rabbit:
     image: rabbitmq:management
@@ -42,18 +53,25 @@ services:
       interval: 10s
       timeout: 5s
 
-  bot:
+  website:
     build:
-      context: .
-      dockerfile: docker/services/bot/Dockerfile
+      context: ./src/website
     restart: unless-stopped
-    env_file:
-      - docker/services/bot/.env 
-    depends_on: 
-      rabbit:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    env_file: ./src/website/.env
+
+  # bot:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/services/bot/Dockerfile
+  #   restart: unless-stopped
+  #   env_file:
+  #     - docker/services/bot/.env 
+  #   depends_on: 
+  #     rabbit:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
 
 volumes:
+  postgres_data:
   redis_data:
