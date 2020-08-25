@@ -1,0 +1,56 @@
+version: "2.1"
+
+services:
+  postgres:
+    image: postgres:13-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: fyko
+      POSTGRES_PASSWORD: doctordoctor
+      POSTGRES_DB: giveaways_canary
+    ports:
+      - 5432:5432      
+
+  rabbit:
+    image: rabbitmq:management
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=specisprettycool
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+    ports: 
+      - 15672:15672
+    expose: 
+      - "15672" # management panel
+
+  redis:
+    image: redis:5-alpine
+    restart: unless-stopped
+    volumes:
+      - "redis_data:/data"
+    expose: 
+      - "6379"
+    ports: 
+      - 6379:6379
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+
+  website:
+    image: fyko/giveawaybot_canary_website
+    restart: unless-stopped
+    env_file: ./src/website/.env
+    ports:
+      - "8133:8133"
+    expose:
+      - "8133"
+
+volumes:
+  postgres_data:
+  redis_data:
