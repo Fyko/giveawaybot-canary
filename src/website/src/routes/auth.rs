@@ -91,6 +91,9 @@ async fn callback(id: Identity, cache: Cache, query: web::Query<CallbackQuery>) 
         }
     };
 
+    let guilds = discord::guilds(&token.token_type, &token.access_token).await;
+    println!("{:#?}", guilds);
+
     let private_claim = PrivateClaim::new(user.clone());
     let jwt = create_jwt(private_claim).unwrap();
     id.remember(jwt.clone());

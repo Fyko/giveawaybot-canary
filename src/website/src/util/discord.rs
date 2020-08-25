@@ -4,6 +4,7 @@ use crate::util::{
 };
 use std::collections::HashMap;
 use reqwest::{Client, Error};
+use rustacles_model::guild::Guild;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -18,6 +19,23 @@ pub async fn me(token_type: &str, token: &str) -> Result<DiscordUser, Error> {
 	};
 
 	let json: Result<DiscordUser, _> = res.json().await;
+	match json {
+		Ok(json) => return Ok(json),
+		Err(err) => return Err(err),
+	}
+}
+
+pub async fn guilds(token_type: &str, token: &str) -> Result<Guild, Error> {
+	let client = Client::new();
+
+	let res = client.get("https://discord.com/api/guilds/@me").header("Authorization", format!("{} {}", token_type, token)).send().await;
+
+	let res = match res {
+		Ok(res) => res,
+		Err(e) => return Err(e)
+	};
+
+	let json: Result<Guild, _> = res.json().await;
 	match json {
 		Ok(json) => return Ok(json),
 		Err(err) => return Err(err),
